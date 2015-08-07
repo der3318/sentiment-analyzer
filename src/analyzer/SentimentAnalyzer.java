@@ -2,32 +2,44 @@ package analyzer;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Scanner;
 
 public class SentimentAnalyzer {
 	
-	private static String filenameP = new String("positive.txt");
-	private static String filenameN = new String("negative.txt");
-	private static String filenameADV = new String("adv.txt");
-	private static String filenameT = new String("training.txt");
-	private static String filenameA = new String("answer.txt");
-	private static String filenameO = new String("opinion.txt");
+	private String filenameP = new String("./docs/positive.txt");
+	private String filenameN = new String("./docs/negative.txt");
+	private String filenameADV = new String("./docs/adv.txt");
+	private String filenameT = new String("./docs/training.txt");
+	private String filenameA = new String("./docs/answer.txt");
+	private String filenameO = new String("./docs/opinion.txt");
 	// create dictionary and reader
-	private static SentimentalDictionary dict = new SentimentalDictionary();
-	private static TextReader txt_rdr = new TextReader();
+	private SentimentalDictionary dict = new SentimentalDictionary();
+	private TextReader txt_rdr = new TextReader();
 	// number of correct answers and the total number of opinions
-	private static int correct = 0;
-	private static int total_opinions = 0;
+	private int correct = 0;
+	private int total_opinions = 0;
 	// create SegChinese
-	private static SegChinese seg = new SegChinese();  
+	private SegChinese seg = new SegChinese();  
 	// create frequency recorder
-	private static FrequencyRecorder f_rec = new FrequencyRecorder();
+	private FrequencyRecorder f_rec = new FrequencyRecorder();
 	// create trainer
-	private static KeywordFinder trainer = new KeywordFinder();
+	private KeywordFinder trainer = new KeywordFinder();
+	// OutputWiter
+	private FileWriter fw;
 	
-	public static void read_filename_from_stdin() {
+	public SentimentAnalyzer(String _filenameP, String _filenameN, String _filenameADV, String _filenameT, String _filenameA, String _filenameO) {
+		filenameP = _filenameP;
+		filenameN = _filenameN;
+		filenameADV = _filenameADV;
+		filenameT = _filenameT;
+		filenameA = _filenameA;
+		filenameO = _filenameO;
+	}
+	
+	public void read_filename_from_stdin() {
 		// read file name from stander input
 		Scanner scanner = new Scanner(System.in);
 		System.out.println("Enter the File Name of Positive Sentimental Words:");
@@ -44,7 +56,7 @@ public class SentimentAnalyzer {
 		filenameO = scanner.nextLine();
 	}
 
-	public static void analyze() throws IOException {
+	public void analyze() throws IOException {
 		total_opinions = txt_rdr.getSize();
 		System.out.println("Now Analyzing...");
 		for(int i = 0 ; i < total_opinions ; i++) {
@@ -90,38 +102,57 @@ public class SentimentAnalyzer {
 				total_rate += rate;
 			}
 			if( (total_rate >= 0 && i < 750) || (total_rate < 0 && i >= 750) )	correct += 1;
-			System.out.println("NO." + (i + 1) + ": rate = " + total_rate + (total_rate >= 0 ? "\t (Positive)" : "\t (Negative)"));
+			fw.write("NO." + (i + 1) + ": rate = " + total_rate + (total_rate >= 0 ? "\t (Positive)\n" : "\t (Negative)\n"));
 			for(String sentence : opinion) {
-				System.out.print(seg.segWords(sentence, " ") + " ");	// print detail
+				fw.write(seg.segWords(sentence, " ") + " ");	// print detail
 				for( String segSentence : seg.getSegList(sentence) ){
 					if(total_rate >= 0)	f_rec.addPosFrequency(segSentence);
 					else	f_rec.addNegFrequency(segSentence);
 				}
 			}
-			System.out.print("\nKeyWords Found: "); // print detail
-			for(String word : keywords)	System.out.print(word + "(" + dict.checkWord(word) + ") ");	// print detail
-			for(String word : keyadvs)	System.out.print(word + "(adv) ");	// print detail
-			System.out.println("\n"); // print detail
+			fw.write("\nKeyWords Found: "); // print detail
+			for(String word : keywords)	fw.write(word + "(" + dict.checkWord(word) + ") ");	// print detail
+			for(String word : keyadvs)	fw.write(word + "(adv) ");	// print detail
+			fw.write("\n\n"); // print detail
 		}
 	}
 	
-	public static void main(String[] args) throws IOException
+	public void work() throws IOException
 	{
+		long beginTime, trainTime, dictTime, analyzeTime;
+		fw = new FileWriter("result.txt");
+		
 		//read_filename_from_stdin();
+		
 		// training
 		trainer.setSORate(4.5);
+		beginTime = System.currentTimeMillis();
 		trainer.readTrainingData(filenameT, filenameA);
 		trainer.train();
 		trainer.printToFile();
+		trainTime = System.currentTimeMillis() - beginTime;
+		
 		// make dictionary
+		beginTime = System.currentTimeMillis();
 		dict.makeDict(filenameP, filenameN, filenameADV);
+		dictTime = System.currentTimeMillis() - beginTime;
+		
+		beginTime = System.currentTimeMillis();
 		// read text file
 		txt_rdr.readText(filenameO);
 		// analyzing
 		analyze();
-		System.out.println("Accuracy: " + correct + "/" + total_opinions +  "(" + (float)correct / (float)total_opinions * 100 + "%)");	
-		System.out.print("Frequent Words: ");
-		f_rec.printFrequentWords(500);
+		analyzeTime = System.currentTimeMillis() - beginTime;
+		
+		fw.write("Time for Training: " + trainTime / 1000.0 + " second(s)\n");
+		fw.write("Time for Making Dictionary: " + dictTime / 1000.0 + " second(s)\n");
+		fw.write("Time for Analyzing: " + analyzeTime / 1000.0 + " second(s)\n");
+		fw.write("Number of Words in Dictionary: " + dict.getSize() + "\n");
+		fw.write("Accuracy: " + correct + "/" + total_opinions +  "(" + (float)correct / (float)total_opinions * 100 + "%)\n");	
+		fw.write( "Frequent Words: " + f_rec.getFrequentWordsString(500) );		
+		fw.flush();
+		fw.close();
+		System.out.println("Completed!\n");
 	}
 	
 }

@@ -41,12 +41,14 @@ public class FrequencyRecorder {
 		return output;
 	}
 	
-	public void printFrequentWords(int _base) {
+	public String getFrequentWordsString(int _base) {
+		String output = new String();
 		for( String key : getRecordedStrings() ) {
 			int p = getPosFrequency(key);
 			int n = getNegFrequency(key);
-			if(p + n >= _base)	System.out.print(key + "(" + (p + n) + ") ");
+			if(p + n >= _base)	output += (key + "(" + (p + n) + ") ");
 		}
+		return output;
 	}
 	
 	// print the frequencies of positive and negative

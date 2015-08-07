@@ -50,6 +50,11 @@ public class SentimentalDictionary {
 		return output_list;
 	}
 	
+	// get the size(numbers of words) of the dictionary
+	public int getSize() {
+		return mydict.size() + myadv.size();
+	}
+	
 	// print dictionary
 	public void printDict() {
 		for( String key : mydict.keySet() )	System.out.println(key + ", " + mydict.get(key));
@@ -59,7 +64,7 @@ public class SentimentalDictionary {
 	public void makeDict(String _filenameP, String _filenameN, String _filenameADV) throws IOException {		
 		try {
 			// access positive words
-			String[] filenames = {_filenameP, "pos_by_training.txt"};
+			String[] filenames = {_filenameP, "./docs/pos_by_training.txt"};
 			for(String filename : filenames) {
 				System.out.println("Accessing " + filename);
 				FileReader fr = new FileReader(filename);
@@ -78,7 +83,7 @@ public class SentimentalDictionary {
 		}
 		try {
 			// access negative words
-			String[] filenames = {_filenameN, "neg_by_training.txt"};
+			String[] filenames = {_filenameN, "./docs/neg_by_training.txt"};
 			for(String filename : filenames) {
 				System.out.println("Accessing " + filename);
 				FileReader fr = new FileReader(filename);

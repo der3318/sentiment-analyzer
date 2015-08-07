@@ -75,10 +75,10 @@ public class KeywordFinder {
 	}
 
 	public void printToFile() throws IOException {
-		System.out.println("Saving Results into \"pos_by_training.txt\" and \"neg_by_training\"");
-		FileWriter fw_p = new FileWriter("pos_by_training.txt");
+		System.out.println("Saving Results into \"./docs/pos_by_training.txt\" and \"./docs/neg_by_training.txt\"");
+		FileWriter fw_p = new FileWriter("./docs/pos_by_training.txt");
 		for( String s : dict.getPositiveWords() )	fw_p.write(s + "\n");
-		FileWriter fw_n = new FileWriter("neg_by_training.txt");
+		FileWriter fw_n = new FileWriter("./docs/neg_by_training.txt");
 		for( String s : dict.getNegativeWords() )	fw_n.write(s + "\n");
 		fw_p.flush();
 		fw_n.flush();
