@@ -22,7 +22,7 @@ import javax.swing.JTextField;
 
 import analyzer.SentimentAnalyzer;
 
-public class UIPane extends JPanel implements ActionListener {
+public class UIPanel extends JPanel implements ActionListener {
 
 	private JLabel textT, textA, textP, textN, textADV, textO, topic;
 	private JTextField viewT, viewA, viewP, viewN, viewADV, viewO;
@@ -30,27 +30,27 @@ public class UIPane extends JPanel implements ActionListener {
 	private JButton btnT, btnA, btnP, btnN, btnADV, btnO, start, cancle, showResult;
 	private JScrollPane scrollPane;
 	
-	public UIPane() {
+	public UIPanel() {
 		setLayout(new FlowLayout());
 		add( topic = new JLabel("Sentiment Analyzer") );
 		add( textP = new JLabel("File of Positive Sentimental Words: ") );
 		add( viewP = new JTextField("./docs/positive.txt", 25) );
-		add( btnP = new JButton("Browse") );
+		add( btnP = new JButton("Browse...") );
 		add( textN = new JLabel("File of Negative Sentimental Words: ") );
 		add( viewN = new JTextField("./docs/negative.txt",25) );
-		add( btnN = new JButton("Browse") );
+		add( btnN = new JButton("Browse...") );
 		add( textADV = new JLabel("File of Adverbs: ") );
 		add( viewADV = new JTextField("./docs/adv.txt",25) );
-		add( btnADV = new JButton("Browse") );
+		add( btnADV = new JButton("Browse...") );
 		add( textT = new JLabel("File of Training Data: ") );
 		add( viewT = new JTextField("./docs/training.txt",25) );
-		add( btnT = new JButton("Browse") );
+		add( btnT = new JButton("Browse...") );
 		add( textA = new JLabel("File of the Answers: ") );
 		add( viewA = new JTextField("./docs/answer.txt",25) );
-		add( btnA = new JButton("Browse") );
+		add( btnA = new JButton("Browse...") );
 		add( textO = new JLabel("File of Testing Opinions: ") );
 		add( viewO = new JTextField("./docs/opinion.txt",25) );
-		add( btnO = new JButton("Browse") );
+		add( btnO = new JButton("Browse...") );
 		add( start = new JButton("Start Analyzing") );
 		add( cancle = new JButton("Cancle") );
 		add( showResult = new JButton("Show Results") );
@@ -92,15 +92,17 @@ public class UIPane extends JPanel implements ActionListener {
 			SentimentAnalyzer sa = new SentimentAnalyzer( viewP.getText(), viewN.getText(), viewADV.getText(), viewT.getText(), viewA.getText(), viewO.getText() );
 			try {
 				status.setText("");
-				System.setOut( new PrintStream("./docs/log.txt") );
+				System.setOut( new PrintStream("./log/log.txt") );
+				System.setErr( new PrintStream("./log/log.txt") );
 				sa.work();
-				BufferedReader br = new BufferedReader( new FileReader("./docs/log.txt") );
+				BufferedReader br = new BufferedReader( new FileReader("./log/log.txt") );
 				String tmp = br.readLine();
 				while(tmp != null)	{
 					status.append(tmp + "\n");
 					tmp = br.readLine();
 				}
-				status.append("Results are now availabe in \"result.txt\"");
+				if( !status.getText().contains("Exception") )	status.append("Results are now Availabe in \"result.txt\"");
+				else	status.append("Process Failed due to Some Errors");
 				br.close();
 			}
 			catch (IOException ioe)	{

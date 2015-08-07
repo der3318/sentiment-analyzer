@@ -1,8 +1,8 @@
-# SentimentAnalyzer-情緒分析
+# SentimentAnalyzer-正反情緒分析
 
 ## 開發環境
 * Eclipse
-* JRE ver.1.8
+* JDK/JRE ver.1.8
 * 中文編碼utf-8
 
 ## 架構

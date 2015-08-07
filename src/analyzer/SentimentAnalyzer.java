@@ -39,6 +39,9 @@ public class SentimentAnalyzer {
 		filenameO = _filenameO;
 	}
 	
+	public SentimentAnalyzer() {
+	}
+
 	public void read_filename_from_stdin() {
 		// read file name from stander input
 		Scanner scanner = new Scanner(System.in);
