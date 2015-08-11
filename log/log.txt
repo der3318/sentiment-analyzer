@@ -1,12 +1,12 @@
-Accessing D:\JavaPractice\eclipse環境\SentimentAnalyzer\docs\sentiment dataset\answer.txt
-Accessing D:\JavaPractice\eclipse環境\SentimentAnalyzer\docs\sentiment dataset\training.txt
+Accessing ./docs/answer.txt
+Accessing ./docs/training.txt
 Saving Results into "./docs/pos_by_training.txt" and "./docs/neg_by_training.txt"
 Accessing ./docs/positive.txt
 Accessing ./docs/pos_by_training.txt
 Accessing ./docs/negative.txt
 Accessing ./docs/neg_by_training.txt
 Accessing ./docs/adv.txt
-Accessing D:\JavaPractice\eclipse環境\SentimentAnalyzer\docs\sentiment dataset\反黑箱課綱.txt
+Accessing ./docs/opinion.txt
 Now Analyzing...
 Completed!
 

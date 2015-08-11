@@ -15,13 +15,11 @@ public class SentimentAnalyzer {
 	private String filenameT = new String("./docs/training.txt");
 	private String filenameA = new String("./docs/answer.txt");
 	private String filenameO = new String("./docs/opinion.txt");
-	private String filenameCkip = new String("./docs/ckip.txt"); 
 	// create dictionary and reader
 	private SentimentalDictionary dict = new SentimentalDictionary();
 	private TextReader txt_rdr = new TextReader();
-	private CkipReader ckip_rdr = new CkipReader();
 	// number of correct answers and the total number of opinions
-	private int correct = 0;
+	private int positive = 0;
 	private int total_opinions = 0;
 	// create SegChinese
 	private SegChinese seg = new SegChinese();  
@@ -32,19 +30,22 @@ public class SentimentAnalyzer {
 	// OutputWriter
 	private FileWriter fw;
 	
-	public SentimentAnalyzer(String _filenameP, String _filenameN, String _filenameADV, String _filenameT, String _filenameA, String _filenameO, String _filenameCkip) {
+	public SentimentAnalyzer(String _filenameP, String _filenameN, String _filenameADV, String _filenameT, String _filenameA, String _filenameO) {
 		filenameP = _filenameP;
 		filenameN = _filenameN;
 		filenameADV = _filenameADV;
 		filenameT = _filenameT;
 		filenameA = _filenameA;
 		filenameO = _filenameO;
-		filenameCkip = _filenameCkip;
 	}
 	
 	public SentimentAnalyzer() {
 	}
 
+	public void setSORate(double _rate) {
+		trainer.setSORate(_rate);
+	}
+	
 	private void analyze() throws IOException {
 		total_opinions = txt_rdr.getSize();
 		System.out.println("Now Analyzing...");
@@ -90,8 +91,8 @@ public class SentimentAnalyzer {
 				if( sentence.contains("不") || sentence.contains("沒") )		rate *= -1;
 				total_rate += rate;
 			}
-			if( (total_rate >= 0 && i < 750) || (total_rate < 0 && i >= 750) )	correct += 1;
-			fw.write("NO." + (i + 1) + ": rate = " + total_rate + (total_rate >= 0 ? "\t (Positive)\n" : "\t (Negative)\n"));
+			if(total_rate >= 0)	positive += 1;
+			fw.write("NO." + (i + 1) + ": rate = " + total_rate + (total_rate >= 0 ? " (Positive)\n" : " (Negative)\n"));
 			for(String sentence : opinion) {
 				fw.write(seg.segWords(sentence, " ") + " ");	// print detail
 				for( String segSentence : seg.getSegList(sentence) ){
@@ -106,26 +107,12 @@ public class SentimentAnalyzer {
 		}
 	}
 	
-	private void showPOST() throws IOException {
-		int n = ckip_rdr.getSize();
-		for(int i = 0 ; i < n ; i++) {
-			fw.write("NO." + (i + 1) + "\nNP: ");
-			for(String s : ckip_rdr.getNPbyIndex(i) ) fw.write(s + " ");
-			fw.write("\nVP: ");
-			for(String s : ckip_rdr.getVPbyIndex(i) ) fw.write(s + " ");
-			fw.write("\n(DFA)VH: ");
-			for(String s : ckip_rdr.getDfaVHbyIndex(i) ) fw.write(s + " ");
-			fw.write("\n\n");
-		}
-	}
-	
 	public void work() throws IOException
 	{
 		long beginTime, trainTime, dictTime, analyzeTime;
 		fw = new FileWriter("result.txt");
 		
 		// training
-		trainer.setSORate(4.5);
 		beginTime = System.currentTimeMillis();
 		trainer.readTrainingData(filenameT, filenameA);
 		trainer.train();
@@ -144,15 +131,11 @@ public class SentimentAnalyzer {
 		analyze();
 		analyzeTime = System.currentTimeMillis() - beginTime;
 		
-		// CKIP version
-		// ckip_rdr.readCkip(filenameCkip);
-		// showPOST();
-		
 		fw.write("Time for Training: " + trainTime / 1000.0 + " second(s)\n");
 		fw.write("Time for Making Dictionary: " + dictTime / 1000.0 + " second(s)\n");
 		fw.write("Time for Analyzing: " + analyzeTime / 1000.0 + " second(s)\n");
 		fw.write("Number of Words in Dictionary: " + dict.getSize() + "\n");
-		fw.write("Accuracy: " + correct + "/" + total_opinions +  "(" + (float)correct / (float)total_opinions * 100 + "%)\n");	
+		fw.write("Positive/Negative: " + positive + "/" + (total_opinions - positive) + "\n");	
 		fw.write( "Frequent Words: " + f_rec.getFrequentWordsString(500) );		
 		fw.flush();
 		fw.close();
