@@ -19,7 +19,7 @@ public class UIFrame extends JFrame{
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);	
 		setContentPane(ui_panel = new UIPanel());
 		setLocation(ALLBITS, ALLBITS);
-		setSize(400,550);
+		setSize(400,600);
 		setUndecorated(true);
 		setVisible(true);
 	}
@@ -27,8 +27,8 @@ public class UIFrame extends JFrame{
 	public static void main(String[] args) throws IOException {
 		
 		/* Command Line version */ 
-		// SentimentAnalyzer sa = new SentimentAnalyzer();
-		// sa.work();
+		//SentimentAnalyzer sa = new SentimentAnalyzer();
+		//sa.work();
 		
 		/* GUI version */ 
 		UIFrame ui_frame = new UIFrame();

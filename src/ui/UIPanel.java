@@ -24,10 +24,10 @@ import analyzer.SentimentAnalyzer;
 
 public class UIPanel extends JPanel implements ActionListener {
 
-	private JLabel textT, textA, textP, textN, textADV, textO, topic;
-	private JTextField viewT, viewA, viewP, viewN, viewADV, viewO;
+	private JLabel textT, textA, textP, textN, textADV, textO, textCkip, topic;
+	private JTextField viewT, viewA, viewP, viewN, viewADV, viewO, viewCkip;
 	private JTextArea status;
-	private JButton btnT, btnA, btnP, btnN, btnADV, btnO, start, cancle, showResult;
+	private JButton btnT, btnA, btnP, btnN, btnADV, btnO, btnCkip, start, cancle, showResult;
 	private JScrollPane scrollPane;
 	
 	public UIPanel() {
@@ -45,12 +45,15 @@ public class UIPanel extends JPanel implements ActionListener {
 		add( textT = new JLabel("File of Training Data: ") );
 		add( viewT = new JTextField("./docs/training.txt",25) );
 		add( btnT = new JButton("Browse...") );
-		add( textA = new JLabel("File of the Answers: ") );
+		add( textA = new JLabel("File of the Answers of the Training Data: ") );
 		add( viewA = new JTextField("./docs/answer.txt",25) );
 		add( btnA = new JButton("Browse...") );
 		add( textO = new JLabel("File of Testing Opinions: ") );
 		add( viewO = new JTextField("./docs/opinion.txt",25) );
 		add( btnO = new JButton("Browse...") );
+		add( textCkip = new JLabel("File of Testing Opinions Parsed by CKIP: ") );
+		add( viewCkip = new JTextField("./docs/ckip.txt",25) );
+		add( btnCkip = new JButton("Browse...") );
 		add( start = new JButton("Start Analyzing") );
 		add( cancle = new JButton("Cancle") );
 		add( showResult = new JButton("Show Results") );
@@ -61,6 +64,7 @@ public class UIPanel extends JPanel implements ActionListener {
 		btnT.addActionListener(this);
 		btnA.addActionListener(this);
 		btnO.addActionListener(this);
+		btnCkip.addActionListener(this);
 		start.addActionListener(this);
 		start.setForeground(Color.WHITE);
 		start.setBackground(Color.BLACK);
@@ -81,6 +85,7 @@ public class UIPanel extends JPanel implements ActionListener {
 		textT.setFont( new Font("Tahoma", Font.PLAIN, 16) );
 		textA.setFont( new Font("Tahoma", Font.PLAIN, 16) );
 		textO.setFont( new Font("Tahoma", Font.PLAIN, 16) );
+		textCkip.setFont( new Font("Tahoma", Font.PLAIN, 16) );
 		status.setFont( new Font(Font.DIALOG, Font.PLAIN, 16) );
 		status.setBackground(Color.LIGHT_GRAY);
 		status.setAutoscrolls( getAutoscrolls() );
@@ -89,7 +94,7 @@ public class UIPanel extends JPanel implements ActionListener {
 	@Override
 	public void actionPerformed(ActionEvent ae) {
 		if(ae.getSource() == start) {
-			SentimentAnalyzer sa = new SentimentAnalyzer( viewP.getText(), viewN.getText(), viewADV.getText(), viewT.getText(), viewA.getText(), viewO.getText() );
+			SentimentAnalyzer sa = new SentimentAnalyzer( viewP.getText(), viewN.getText(), viewADV.getText(), viewT.getText(), viewA.getText(), viewO.getText(), viewCkip.getText() );
 			try {
 				status.setText("");
 				System.setOut( new PrintStream("./log/log.txt") );
@@ -131,6 +136,7 @@ public class UIPanel extends JPanel implements ActionListener {
 			if(ae.getSource() == btnT)	viewT.setText( chooser.getSelectedFile().getAbsolutePath() );
 			if(ae.getSource() == btnA)	viewA.setText( chooser.getSelectedFile().getAbsolutePath() );
 			if(ae.getSource() == btnO)	viewO.setText( chooser.getSelectedFile().getAbsolutePath() );
+			if(ae.getSource() == btnCkip)	viewCkip.setText( chooser.getSelectedFile().getAbsolutePath() );
 		}
 	}
 
