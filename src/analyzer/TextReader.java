@@ -26,6 +26,7 @@ public class TextReader {
 				opinion_list.add(opinion);
 				tmp = br.readLine();
 			}
+			br.close();
 		}
 		catch (FileNotFoundException e) {
 			System.out.println("Text File not Found");

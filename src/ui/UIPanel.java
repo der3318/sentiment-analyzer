@@ -11,6 +11,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.HashMap;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
@@ -24,11 +26,30 @@ import analyzer.SentimentAnalyzer;
 
 public class UIPanel extends JPanel implements ActionListener {
 
-	private JLabel textT, textA, textP, textN, textADV, textO, topic;
+	private JLabel textT, textA, textP, textN, textADV, textO, topic, warning;
 	private JTextField viewT, viewA, viewP, viewN, viewADV, viewO;
 	private JTextArea status;
 	private JButton btnT, btnA, btnP, btnN, btnADV, btnO, start, cancle, showResult;
 	private JScrollPane scrollPane;
+	Timer timer;
+	
+	class TTask extends TimerTask {
+		
+		public void run() {
+			warning.setText("     ");
+			start.setEnabled(true);
+			showResult.setEnabled(true);
+			if( !new File( viewT.getText() ).exists() )	warning.setText("File of Training Data not Found");
+			if( !new File( viewA.getText() ).exists() )	warning.setText("File of Training Answers not Found");
+			if( !new File( viewP.getText() ).exists() )	warning.setText("File of Positive Words not Found");
+			if( !new File( viewN.getText() ).exists() )	warning.setText("File of Negative Words not Found");
+			if( !new File( viewADV.getText() ).exists() )	warning.setText("File of Adverbs not Found");
+			if( !new File( viewO.getText() ).exists() )	warning.setText("File of Testing Opinions not Found");
+			if( !warning.getText().equals("     ") )	start.setEnabled(false);
+			if( !new File( "result.txt" ).exists() )	showResult.setEnabled(false);
+		}
+		
+	}
 	
 	public UIPanel() {
 		setLayout(new FlowLayout());
@@ -54,7 +75,8 @@ public class UIPanel extends JPanel implements ActionListener {
 		add( start = new JButton("Start Analyzing") );
 		add( cancle = new JButton("Cancle") );
 		add( showResult = new JButton("Show Results") );
-		add( scrollPane = new JScrollPane( status = new JTextArea(5, 30) ) );
+		add( scrollPane = new JScrollPane( status = new JTextArea(5, 28) ) );
+		add( warning = new JLabel("     ") );
 		btnP.addActionListener(this);
 		btnN.addActionListener(this);
 		btnADV.addActionListener(this);
@@ -81,9 +103,13 @@ public class UIPanel extends JPanel implements ActionListener {
 		textT.setFont( new Font("Tahoma", Font.PLAIN, 16) );
 		textA.setFont( new Font("Tahoma", Font.PLAIN, 16) );
 		textO.setFont( new Font("Tahoma", Font.PLAIN, 16) );
+		warning.setFont( new Font("consolas", Font.PLAIN, 14) );
+		warning.setForeground(Color.RED);
 		status.setFont( new Font(Font.DIALOG, Font.PLAIN, 16) );
 		status.setBackground(Color.LIGHT_GRAY);
 		status.setAutoscrolls( getAutoscrolls() );
+		timer = new Timer();
+		timer.schedule(new TTask(), 500, 1000);
 	}
 
 	@Override
@@ -101,7 +127,7 @@ public class UIPanel extends JPanel implements ActionListener {
 					status.append(tmp + "\n");
 					tmp = br.readLine();
 				}
-				if( !status.getText().contains("Exception") )	status.append("Results are now Availabe in \"result.txt\"");
+				if( !status.getText().contains("Exception") )	status.append("\nResults are now Availabe in \"result.txt\"");
 				else	status.append("Process Failed due to Some Errors");
 				br.close();
 			}

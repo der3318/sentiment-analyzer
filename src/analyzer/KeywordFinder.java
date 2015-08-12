@@ -47,6 +47,7 @@ public class KeywordFinder {
 				else	ans.add(false);
 				tmp = br.readLine();
 			}
+			br.close();
 		}
 		catch (FileNotFoundException e) {
 			System.out.println("Answer File not Found");

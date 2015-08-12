@@ -16,19 +16,21 @@ public class SentimentAnalyzer {
 	private String filenameA = new String("./docs/answer.txt");
 	private String filenameO = new String("./docs/opinion.txt");
 	// create dictionary and reader
-	private SentimentalDictionary dict = new SentimentalDictionary();
-	private TextReader txt_rdr = new TextReader();
-	// number of correct answers and the total number of opinions
-	private int positive = 0;
-	private int total_opinions = 0;
+	private SentimentalDictionary dict;
+	private TextReader txt_rdr;
+	// number of positive answers and the total number of opinions
+	private int positive;
+	private int total_opinions;
 	// create SegChinese
 	private SegChinese seg = new SegChinese();  
 	// create frequency recorder
-	private FrequencyRecorder f_rec = new FrequencyRecorder();
+	private FrequencyRecorder f_rec;
 	// create trainer
-	private KeywordFinder trainer = new KeywordFinder();
+	private KeywordFinder trainer;
 	// OutputWriter
 	private FileWriter fw;
+	// SORate
+	private double SORate = 4.5d;
 	
 	public SentimentAnalyzer(String _filenameP, String _filenameN, String _filenameADV, String _filenameT, String _filenameA, String _filenameO) {
 		filenameP = _filenameP;
@@ -43,10 +45,11 @@ public class SentimentAnalyzer {
 	}
 
 	public void setSORate(double _rate) {
-		trainer.setSORate(_rate);
+		SORate = _rate;
 	}
 	
 	private void analyze() throws IOException {
+		positive = 0;
 		total_opinions = txt_rdr.getSize();
 		System.out.println("Now Analyzing...");
 		for(int i = 0 ; i < total_opinions ; i++) {
@@ -107,13 +110,17 @@ public class SentimentAnalyzer {
 		}
 	}
 	
-	public void work() throws IOException
-	{
+	public void work() throws IOException {
 		long beginTime, trainTime, dictTime, analyzeTime;
+		dict = new SentimentalDictionary();
+		txt_rdr = new TextReader();
+		f_rec = new FrequencyRecorder();
+		trainer = new KeywordFinder();
 		fw = new FileWriter("result.txt");
 		
 		// training
 		beginTime = System.currentTimeMillis();
+		trainer.setSORate(SORate);
 		trainer.readTrainingData(filenameT, filenameA);
 		trainer.train();
 		trainer.printToFile();
@@ -131,15 +138,15 @@ public class SentimentAnalyzer {
 		analyze();
 		analyzeTime = System.currentTimeMillis() - beginTime;
 		
-		fw.write("Time for Training: " + trainTime / 1000.0 + " second(s)\n");
-		fw.write("Time for Making Dictionary: " + dictTime / 1000.0 + " second(s)\n");
-		fw.write("Time for Analyzing: " + analyzeTime / 1000.0 + " second(s)\n");
-		fw.write("Number of Words in Dictionary: " + dict.getSize() + "\n");
-		fw.write("Positive/Negative: " + positive + "/" + (total_opinions - positive) + "\n");	
-		fw.write( "Frequent Words: " + f_rec.getFrequentWordsString(500) );		
+		System.out.println("Completed!");
+		System.out.println("Time for Training: " + trainTime / 1000.0 + " second(s)");
+		System.out.println("Time for Making Dictionary: " + dictTime / 1000.0 + " second(s)");
+		System.out.println("Time for Analyzing: " + analyzeTime / 1000.0 + " second(s)");
+		System.out.println( "Number of Words in Dictionary: " + dict.getSize() );
+		System.out.println( "Positive/Negative: " + positive + "/" + (total_opinions - positive) );	
+		System.out.println( "Frequent Words: " + f_rec.getFrequentWordsString(500) );		
 		fw.flush();
-		fw.close();
-		System.out.println("Completed!\n");
+		fw.close();	
 	}
 	
 }
