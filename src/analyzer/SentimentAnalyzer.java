@@ -144,7 +144,13 @@ public class SentimentAnalyzer {
 		System.out.println("Time for Analyzing: " + analyzeTime / 1000.0 + " second(s)");
 		System.out.println( "Number of Words in Dictionary: " + dict.getSize() );
 		System.out.println( "Positive/Negative: " + positive + "/" + (total_opinions - positive) );	
-		System.out.println( "Frequent Words: " + f_rec.getFrequentWordsString(500) );		
+		System.out.println( "Frequent Words: " + f_rec.getFrequentWordsString(500) );
+		fw.write("Top Ten Keywords from Positive Opinions: ");
+		for( String s : f_rec.getTopTenPosWords() )	fw.write(s + "(" + f_rec.getPosFrequency(s) + ") ");
+		fw.write("\n");
+		fw.write("Top Ten Keywords from Negative Opinions: ");
+		for( String s : f_rec.getTopTenNegWords() )	fw.write(s + "(" + f_rec.getNegFrequency(s) + ") ");
+		fw.write("\n");
 		fw.flush();
 		fw.close();	
 	}

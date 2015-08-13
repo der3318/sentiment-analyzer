@@ -1,8 +1,14 @@
 package analyzer;
 
+import java.awt.List;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 public class FrequencyRecorder {
@@ -47,6 +53,46 @@ public class FrequencyRecorder {
 			int p = getPosFrequency(key);
 			int n = getNegFrequency(key);
 			if(p + n >= _base)	output += (key + "(" + (p + n) + ") ");
+		}
+		return output;
+	}
+	
+	// return an ArrayList containing top ten positive words
+	public ArrayList<String> getTopTenPosWords() {
+		ArrayList<String> output = new ArrayList<String>();
+		ArrayList<Map.Entry<String, Integer>> list_entry = new ArrayList<Map.Entry<String, Integer>>( frequency_pos.entrySet() );
+		Collections.sort( 
+				list_entry, 
+				new Comparator<Map.Entry<String, Integer>>() {
+					public int compare(Map.Entry<String, Integer> o1, Map.Entry<String, Integer> o2) {
+						return o2.getValue() - o1.getValue();
+					}
+				}
+			);
+		for( Map.Entry<String, Integer> entry : list_entry ) {
+			if(output.size() == 10)	break;
+			if(entry.getKey().equals("的") || entry.getKey().equals("是") || entry.getKey().equals("了") || entry.getKey().equals("我"))	continue;
+			output.add( entry.getKey() );
+		}
+		return output;
+	}
+	
+	// return an ArrayList containing top ten negative words
+	public ArrayList<String> getTopTenNegWords() {
+		ArrayList<String> output = new ArrayList<String>();
+		ArrayList<Map.Entry<String, Integer>> list_entry = new ArrayList<Map.Entry<String, Integer>>( frequency_neg.entrySet() );
+		Collections.sort( 
+				list_entry, 
+				new Comparator<Map.Entry<String, Integer>>() {
+					public int compare(Map.Entry<String, Integer> o1, Map.Entry<String, Integer> o2) {
+						return o2.getValue() - o1.getValue();
+					}
+				}
+			);
+		for( Map.Entry<String, Integer> entry : list_entry ) {
+			if(output.size() == 10)	break;
+			if(entry.getKey().equals("的") || entry.getKey().equals("是") || entry.getKey().equals("了") || entry.getKey().equals("我"))	continue;
+			output.add( entry.getKey() );
 		}
 		return output;
 	}

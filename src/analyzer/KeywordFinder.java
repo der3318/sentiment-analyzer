@@ -19,7 +19,7 @@ public class KeywordFinder {
 	// an ArrayList holding the answers of the training data
 	private ArrayList<Boolean> ans = new ArrayList<Boolean>();
 	// set the branch for SO-PMI result
-	private double SO_rate = 4.5d;
+	private double SO_rate = 3d;
 	
 	public void setSORate (double _rate) {
 		SO_rate = _rate;

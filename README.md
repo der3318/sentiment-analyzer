@@ -43,7 +43,7 @@ Step2 計算各單詞出現次數（頻率）
 
 Step3 選擇一些在該類文章中，具代表性的正負面詞彙，加入字典
 
-	選擇的標準：SO值 > 4.5，加入Positive字典；SO值 < -4.5，加入Negative字典
+	選擇的標準：SO值 > 3.0，加入Positive字典；SO值 < -3.0，加入Negative字典
 
 ![PMISO](http://i.imgur.com/PU2UCXj.jpg)
 
@@ -136,4 +136,6 @@ Step5 判斷整則評論的正反傾向
 	Line3	`Keywords Found: ` + 數個`%s(+1、-1或adv)`，為找到的關鍵字和其意義
 
 	Line4	空行
+
+* 檔尾則會另列此次分析中，正反評論中的前10名關鍵字
 
