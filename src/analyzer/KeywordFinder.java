@@ -6,9 +6,12 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class KeywordFinder {
-	
+
+	private int NTHREADS = 4;
 	// create dictionary and reader
 	private SentimentalDictionary dict = new SentimentalDictionary();
 	private TextReader txt_rdr = new TextReader();	
@@ -18,20 +21,61 @@ public class KeywordFinder {
 	private FrequencyRecorder f_rec = new FrequencyRecorder();
 	// an ArrayList holding the answers of the training data
 	private ArrayList<Boolean> ans = new ArrayList<Boolean>();
+	private int ans_pos = 0;
+	private int ans_neg = 0;
 	// set the branch for SO-PMI result
 	private double SO_rate = 3d;
 	
-	public void setSORate (double _rate) {
+	public class FreRunnable implements Runnable {
+
+		private int index;
+		
+		FreRunnable(int _index) {
+			index = _index;
+		}
+		
+		public void run() {
+			ArrayList<String> opinion = txt_rdr.getTextbyIndex(index);
+			for(String sentence : opinion) {
+				try {
+					for( String subSentence : seg.getSegList(sentence) ) {
+						if( ans.get(index) )	f_rec.addPosFrequency(subSentence);
+						else	f_rec.addNegFrequency(subSentence);
+					}
+				}
+				catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		
+	}
+	
+	public class DictRunnable implements Runnable {
+		
+		private String s;
+		
+		DictRunnable(String _s) {
+			s = _s;
+		}
+		
+		public void run() {
+			if( SO(s) > SO_rate )	 dict.addPositiveWords(s);
+			else if( SO(s) < -SO_rate )	dict.addNegativeWords(s);
+		}
+	
+	}
+
+	public void setSORate(double _rate) {
 		SO_rate = _rate;
+	}
+	
+	public void setNTHREADS(int _nthreads) {
+		NTHREADS = _nthreads;
 	}
 	
 	// SO = PMI(_string, positive) - PMI(_string, negative)
 	private double SO(String _string) {
-		int ans_pos = 0, ans_neg = 0;
-		for(boolean a : ans) {
-			ans_pos += (a ? 1 : 0);
-			ans_neg += (a ? 0 : 1);
-		}
 		return Math.log( ((double)f_rec.getPosFrequency(_string) + 0.1) / ((double)f_rec.getNegFrequency(_string) + 0.1) * ((double)ans_neg + 0.1) / ((double)ans_pos + 0.1) );
 	}
 	
@@ -43,8 +87,14 @@ public class KeywordFinder {
 			BufferedReader br = new BufferedReader(fr);
 			String tmp = br.readLine();
 			while(tmp != null) {
-				if(tmp.trim().equals("P"))	ans.add(true);
-				else	ans.add(false);
+				if(tmp.trim().equals("P")) {
+					ans.add(true);
+					ans_pos += 1;
+				}
+				else {
+					ans.add(false);
+					ans_neg += 1;
+				}
 				tmp = br.readLine();
 			}
 			br.close();
@@ -60,18 +110,21 @@ public class KeywordFinder {
 	public void train() throws IOException {
 		int n = txt_rdr.getSize();
 		assert( n == ans.size() && n != 0);
+		ExecutorService fre_executor = Executors.newFixedThreadPool(NTHREADS);
+		ExecutorService dict_executor = Executors.newFixedThreadPool(NTHREADS);
 		for(int i = 0 ; i < n ; i++) {
-			// get the "i th" opinion
-			ArrayList<String> opinion = txt_rdr.getTextbyIndex(i);
-			for(String sentence : opinion)
-				for( String subSentence : seg.getSegList(sentence) ) {
-					if( ans.get(i) )	f_rec.addPosFrequency(subSentence);
-					else	f_rec.addNegFrequency(subSentence);
-				}
+			Runnable task = new FreRunnable(i);
+			fre_executor.execute(task);
+		}
+		fre_executor.shutdown();
+		while( !fre_executor.isTerminated() ) {
 		}
 		for( String s : f_rec.getRecordedStrings() ) {
-			if( SO(s) > SO_rate )	 dict.addPositiveWords(s);
-			else if( SO(s) < -SO_rate )	dict.addNegativeWords(s);
+			Runnable task = new DictRunnable(s);
+			dict_executor.execute(task);
+		}
+		dict_executor.shutdown();
+		while( !dict_executor.isTerminated() ) {
 		}
 	}
 

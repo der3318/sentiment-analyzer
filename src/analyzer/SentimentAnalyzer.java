@@ -1,14 +1,17 @@
 package analyzer;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Scanner;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 public class SentimentAnalyzer {
 	
+	private int NTHREADS = 4;
 	private String filenameP = new String("./docs/positive.txt");
 	private String filenameN = new String("./docs/negative.txt");
 	private String filenameADV = new String("./docs/adv.txt");
@@ -30,7 +33,80 @@ public class SentimentAnalyzer {
 	// OutputWriter
 	private FileWriter fw;
 	// SORate
-	private double SORate = 4.5d;
+	private double SORate = 3.0d;
+	
+	public class SACallable implements Callable<String> {
+
+		private int index;
+		
+		SACallable(int _index) {
+			index = _index;
+		}
+		
+		public String call() {
+			String output = new String();
+			try {
+				int total_rate = 0;
+				ArrayList<String> opinion = txt_rdr.getTextbyIndex(index);
+				ArrayList<String> keywords = new ArrayList<String>();
+				ArrayList<String> keyadvs = new ArrayList<String>();
+				for(int i = 0 ; i < opinion.size() ; i++) {
+					// get the "i th" sentence in the "index th" opinion
+					int rate = 0, flag = 1;
+					String sentence = opinion.get(i);
+					// disassemble the sentence and check adverbs
+					for(int length = sentence.length(); length > 0 ; length--) {
+						for(int endIndex = sentence.length() ; endIndex >= length ; endIndex--) {
+							String word = sentence.substring(endIndex - length, endIndex);
+							// key adverb found
+							if( dict.checkAdv(word) ) {
+								flag = 2;
+								keyadvs.add(word);
+								sentence = sentence.replaceAll(word, "");
+								length = sentence.length() + 1;
+								break;
+							}
+						}
+					}
+					// disassemble the sentence and check sentimental words
+					for(int length = sentence.length(); length > 0 ; length--) {
+						for(int endIndex = sentence.length() ; endIndex >= length ; endIndex--) {
+							String word = sentence.substring(endIndex - length, endIndex);
+							// keyword found
+							if(dict.checkWord(word) != 0) {
+								keywords.add(word);
+								rate += flag * dict.checkWord(word);
+								sentence = sentence.replaceAll(word, "");
+								length = sentence.length() + 1;
+								break;
+							}
+						}
+					}
+					// check if the shifter exists
+					if( sentence.contains("不") || sentence.contains("沒") )		rate *= -1;
+					total_rate += rate;
+				}
+				if(total_rate >= 0)	positive += 1;
+				output = "NO." + (index + 1) + ": rate = " + total_rate + (total_rate >= 0 ? " (Positive)\n" : " (Negative)\n");
+				for(String sentence : opinion) {
+						output += (seg.segWords(sentence, " ") + " "); // print detail
+					for( String segSentence : seg.getSegList(sentence) ){
+						if(total_rate >= 0)	f_rec.addPosFrequency(segSentence);
+						else	f_rec.addNegFrequency(segSentence);
+					}
+				}
+				output += "\nKeyWords Found: ";
+				for(String word : keywords)	output += (word + "(" + dict.checkWord(word) + ") ");
+				for(String word : keyadvs)	output += (word + "(adv) ");
+				output += "\n\n";
+			}
+			catch(Exception ex) {
+				ex.printStackTrace();
+			}
+			return output;
+		}
+		
+	}
 	
 	public SentimentAnalyzer(String _filenameP, String _filenameN, String _filenameADV, String _filenameT, String _filenameA, String _filenameO) {
 		filenameP = _filenameP;
@@ -48,66 +124,23 @@ public class SentimentAnalyzer {
 		SORate = _rate;
 	}
 	
-	private void analyze() throws IOException {
+	public void setNTHREADS(int _nthreads) {
+		NTHREADS = _nthreads;
+	}
+	
+	private void analyze() throws IOException, InterruptedException, ExecutionException {
 		positive = 0;
 		total_opinions = txt_rdr.getSize();
 		System.out.println("Now Analyzing...");
+		ExecutorService executor = Executors.newFixedThreadPool(NTHREADS);
+		ArrayList< Future<String> > resList = new ArrayList< Future<String> >();
 		for(int i = 0 ; i < total_opinions ; i++) {
-			// get the "i th" opinion
-			int total_rate = 0;
-			ArrayList<String> opinion = txt_rdr.getTextbyIndex(i);
-			ArrayList<String> keywords = new ArrayList<String>();
-			ArrayList<String> keyadvs = new ArrayList<String>();
-			for(int j = 0 ; j < opinion.size() ; j++) {
-				// get the "j th" sentence in the "i th" opinion
-				int rate = 0, flag = 1;
-				String sentence = opinion.get(j);
-				// disassemble the sentence and check adverbs
-				for(int length = sentence.length(); length > 0 ; length--) {
-					for(int endIndex = sentence.length() ; endIndex >= length ; endIndex--) {
-						String word = sentence.substring(endIndex - length, endIndex);
-						// key adverb found
-						if( dict.checkAdv(word) ) {
-							flag = 2;
-							keyadvs.add(word);
-							sentence = sentence.replaceAll(word, "");
-							length = sentence.length() + 1;
-							break;
-						}
-					}
-				}
-				// disassemble the sentence and check sentimental words
-				for(int length = sentence.length(); length > 0 ; length--) {
-					for(int endIndex = sentence.length() ; endIndex >= length ; endIndex--) {
-						String word = sentence.substring(endIndex - length, endIndex);
-						// keyword found
-						if(dict.checkWord(word) != 0) {
-							keywords.add(word);
-							rate += flag * dict.checkWord(word);
-							sentence = sentence.replaceAll(word, "");
-							length = sentence.length() + 1;
-							break;
-						}
-					}
-				}
-				// check if the shifter exists
-				if( sentence.contains("不") || sentence.contains("沒") )		rate *= -1;
-				total_rate += rate;
-			}
-			if(total_rate >= 0)	positive += 1;
-			fw.write("NO." + (i + 1) + ": rate = " + total_rate + (total_rate >= 0 ? " (Positive)\n" : " (Negative)\n"));
-			for(String sentence : opinion) {
-				fw.write(seg.segWords(sentence, " ") + " ");	// print detail
-				for( String segSentence : seg.getSegList(sentence) ){
-					if(total_rate >= 0)	f_rec.addPosFrequency(segSentence);
-					else	f_rec.addNegFrequency(segSentence);
-				}
-			}
-			fw.write("\nKeyWords Found: "); // print detail
-			for(String word : keywords)	fw.write(word + "(" + dict.checkWord(word) + ") ");	// print detail
-			for(String word : keyadvs)	fw.write(word + "(adv) ");	// print detail
-			fw.write("\n\n"); // print detail
+			Callable<String> task = new SACallable(i);
+			Future<String> result = executor.submit(task);
+			resList.add(result);
 		}
+		executor.shutdown();
+		for(Future<String> result : resList)	fw.write( result.get() );
 	}
 	
 	public void work() throws IOException {
@@ -121,6 +154,7 @@ public class SentimentAnalyzer {
 		// training
 		beginTime = System.currentTimeMillis();
 		trainer.setSORate(SORate);
+		trainer.setNTHREADS(NTHREADS);
 		trainer.readTrainingData(filenameT, filenameA);
 		trainer.train();
 		trainer.printToFile();
@@ -135,7 +169,15 @@ public class SentimentAnalyzer {
 		// read text file
 		txt_rdr.readText(filenameO);
 		// analyzing
-		analyze();
+		try {
+			analyze();
+		} 
+		catch (InterruptedException e) {
+			e.printStackTrace();
+		} 
+		catch (ExecutionException e) {
+			e.printStackTrace();
+		}
 		analyzeTime = System.currentTimeMillis() - beginTime;
 		
 		System.out.println("Completed!");

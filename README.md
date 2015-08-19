@@ -93,6 +93,10 @@ Step5 判斷整則評論的正反傾向
 
 * Library Setting好之後，使用`SentimentAnalyzer()`建構子和method－`work()`來run
 
+* method－`setNTHREADS(int)` 可設定Training和Analyzing時的Threads數量
+
+* method－`setSORate(double)` 可調整Training時取字的嚴謹程度
+
 ![API](http://i.imgur.com/h7vehb9.jpg)
 
 

@@ -10,23 +10,25 @@ import java.util.HashMap;
 public class SentimentalDictionary {
 	
 	// a HashMap holding sentimental words as keys
-	private HashMap<String, Boolean> mydict = new HashMap<String, Boolean>();
+	private HashMap<String, Integer> mydict = new HashMap<String, Integer>();
 	private HashMap<String, Boolean> myadv = new HashMap<String, Boolean>();
 	
 	// add a positive word into dictionary
-	public void addPositiveWords(String _string) {
-		mydict.put(_string, true);
+	public synchronized void addPositiveWords(String _string) {
+		if( mydict.containsKey(_string) )	mydict.put(_string, mydict.get(_string) + 1);
+		else	mydict.put(_string, 1);
 	}
 	
 	// add a positive word into dictionary
-	public void addNegativeWords(String _string) {
-		mydict.put(_string, false);
+	public synchronized void addNegativeWords(String _string) {
+		if( mydict.containsKey(_string) )	mydict.put(_string, mydict.get(_string) - 1);
+		else	mydict.put(_string, -1);
 	}
 	
 	// get the score of the sentimental word, and return 0 when not found
 	public int checkWord(String _string) {
 		if( !mydict.containsKey(_string) )	return 0;
-		if( mydict.get(_string) )	return 1;
+		if( mydict.get(_string) > 0 )	return 1;
 		return -1;
 	}
 	
@@ -39,14 +41,14 @@ public class SentimentalDictionary {
 	// return an ArrayList containing positive words
 	public ArrayList<String> getPositiveWords() {
 		ArrayList<String> output_list = new ArrayList<String>();
-		for( String key : mydict.keySet() )	if( mydict.get(key) )	output_list.add(key);
+		for( String key : mydict.keySet() )	if( mydict.get(key) > 0 )	output_list.add(key);
 		return output_list;
 	}
 	
 	// return an ArrayList containing negative words
 	public ArrayList<String> getNegativeWords() {
 		ArrayList<String> output_list = new ArrayList<String>();
-		for( String key : mydict.keySet() )	if( !mydict.get(key) )	output_list.add(key);
+		for( String key : mydict.keySet() )	if( mydict.get(key) < 0 )	output_list.add(key);
 		return output_list;
 	}
 	
@@ -71,7 +73,7 @@ public class SentimentalDictionary {
 				BufferedReader br = new BufferedReader(fr);
 				String tmp = br.readLine();
 				while(tmp != null) {
-					mydict.put(tmp.trim() , true);
+					addPositiveWords( tmp.trim() );
 					tmp = br.readLine();
 				}
 				br.close();
@@ -90,7 +92,7 @@ public class SentimentalDictionary {
 				BufferedReader br = new BufferedReader(fr);
 				String tmp = br.readLine();
 				while(tmp != null) {
-					mydict.put(tmp.trim() , false);
+					addNegativeWords( tmp.trim() );
 					tmp = br.readLine();
 				}
 				br.close();

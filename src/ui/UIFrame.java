@@ -19,7 +19,7 @@ public class UIFrame extends JFrame{
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);	
 		setContentPane(ui_panel = new UIPanel());
 		setLocation(ALLBITS, ALLBITS);
-		setSize(400,570);
+		setSize(400,600);
 		setUndecorated(true);
 		setVisible(true);
 	}

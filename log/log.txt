@@ -9,9 +9,9 @@ Accessing ./docs/adv.txt
 Accessing ./docs/opinion.txt
 Now Analyzing...
 Completed!
-Time for Training: 0.843 second(s)
+Time for Training: 0.269 second(s)
 Time for Making Dictionary: 0.009 second(s)
-Time for Analyzing: 0.984 second(s)
+Time for Analyzing: 0.504 second(s)
 Number of Words in Dictionary: 13796
 Positive/Negative: 748/752
 Frequent Words: 服務(664) 了(1372) 在(529) 很(755) 我(838) 是(1271) 有(580) 的(5026) 酒店(1874) 房間(1336) 

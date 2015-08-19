@@ -17,13 +17,13 @@ public class FrequencyRecorder {
 	private HashMap<String, Integer> frequency_neg = new HashMap<String, Integer>();
 	
 	// add the positive frequency of the specific string
-	public void addPosFrequency(String _string) {
+	public synchronized void addPosFrequency(String _string) {
 		if( !frequency_pos.containsKey(_string) )	frequency_pos.put(_string, 1);
 		else frequency_pos.put(_string, frequency_pos.get(_string) + 1);
 	}
 	
 	// add the negative frequency of the specific string
-	public void addNegFrequency(String _string) {
+	public synchronized void addNegFrequency(String _string) {
 		if( !frequency_neg.containsKey(_string) )	frequency_neg.put(_string, 1);
 		else frequency_neg.put(_string, frequency_neg.get(_string) + 1);
 	}
