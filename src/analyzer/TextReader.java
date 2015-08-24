@@ -19,7 +19,7 @@ public class TextReader {
 			BufferedReader br = new BufferedReader(fr);
 			String tmp = br.readLine();
 			while(tmp != null) {
-				String raw_data = tmp.replaceAll("\\pP" , " ");
+				String raw_data = tmp.replaceAll("\\pP" , " ").replaceAll("[a-zA-Z0-9]", " ");
 				String[] spilt_data = raw_data.split(" ");
 				ArrayList<String> opinion = new ArrayList<String>();
 				for( String s : spilt_data )	opinion.add(s);

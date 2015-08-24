@@ -1,55 +1,44 @@
 package analyzer;
 
 import java.io.IOException;
-import java.io.Reader;
-import java.io.StringReader;
 import java.util.ArrayList;
 
-import com.chenlb.mmseg4j.ComplexSeg;
-import com.chenlb.mmseg4j.Dictionary;
-import com.chenlb.mmseg4j.MMSeg;
-import com.chenlb.mmseg4j.Seg;
-import com.chenlb.mmseg4j.Word;
+import com.huaban.analysis.jieba.JiebaSegmenter;
+import com.huaban.analysis.jieba.JiebaSegmenter.SegMode;
+import com.huaban.analysis.jieba.SegToken;
 
 public class SegChinese {
 
-	protected Dictionary dic;
+	private static SegChinese seg;
+	
+	protected JiebaSegmenter segmenter;
 
 	public SegChinese() {
-		dic = Dictionary.getInstance();
+		segmenter = new JiebaSegmenter();
 	}
 
-	protected Seg getSeg() {
-		return new ComplexSeg(dic);
-	}
-
+	public static SegChinese getInstance() {
+        if (seg == null) {
+            synchronized (SegChinese.class) {
+                if (seg == null) {
+                	seg = new SegChinese();
+                	return seg;
+                }
+            }
+        }
+        return seg;
+    }
+	
 	public ArrayList<String> getSegList(String txt) throws IOException {
 		ArrayList<String> output = new ArrayList<String>();
-		Reader input = new StringReader(txt);
-		Seg seg = getSeg();
-		Word word = null;
-		MMSeg mmSeg = new MMSeg(input, seg);
-		while ((word = mmSeg.next()) != null)
-			output.add(word.getString());
+		for( SegToken token : segmenter.process(txt, SegMode.INDEX) )	if( !token.word.isEmpty() )	output.add(token.word);
 		return output;
 	}
 
 	public String segWords(String txt, String wordSpilt) throws IOException {
-		Reader input = new StringReader(txt);
-		StringBuilder sb = new StringBuilder();
-		Seg seg = getSeg();
-		MMSeg mmSeg = new MMSeg(input, seg);
-		Word word = null;
-		boolean first = true;
-		while ((word = mmSeg.next()) != null) {
-			if (!first) {
-				sb.append(wordSpilt);
-			}
-			String w = word.getString();
-			sb.append(w);
-			first = false;
-		}
-		return sb.toString();
+		String output = new String("");
+		for(  SegToken token : segmenter.process(txt, SegMode.INDEX) )	output += (token.word + wordSpilt);
+		return output;
 	}
 
 }

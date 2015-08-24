@@ -1,17 +1,43 @@
 package analyzer;
 
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
 public class SentimentalDictionary {
 	
+	private static SentimentalDictionary dictionary;
+	private static String filenameP = new String("./docs/positive.txt");
+	private static String filenameN = new String("./docs/negative.txt");
+	private static String filenameADV = new String("./docs/adv.txt");
+	
 	// a HashMap holding sentimental words as keys
 	private HashMap<String, Integer> mydict = new HashMap<String, Integer>();
 	private HashMap<String, Boolean> myadv = new HashMap<String, Boolean>();
+	
+	public static SentimentalDictionary getInstance() {
+        if (dictionary == null) {
+            synchronized (SentimentalDictionary.class) {
+                if (dictionary == null) {
+                	dictionary = new SentimentalDictionary();
+                	dictionary.makeDict();
+                	return dictionary;
+                }
+            }
+        }
+        return dictionary;
+    }
+	
+	public static void removeInstance() {
+		dictionary = null;
+	}
+	
+	public static void setFilename(String _filenameP, String _filenameN, String _filenameADV) {
+		filenameP = _filenameP;
+		filenameN = _filenameN;
+		filenameADV = _filenameADV;
+	}
 	
 	// add a positive word into dictionary
 	public synchronized void addPositiveWords(String _string) {
@@ -27,14 +53,14 @@ public class SentimentalDictionary {
 	
 	// get the score of the sentimental word, and return 0 when not found
 	public int checkWord(String _string) {
-		if( !mydict.containsKey(_string) )	return 0;
+		if( _string.isEmpty() || !mydict.containsKey(_string) )	return 0;
 		if( mydict.get(_string) > 0 )	return 1;
 		return -1;
 	}
 	
 	// check if the input word is adv or not
 	public boolean checkAdv(String _string) {
-		if( myadv.containsKey(_string) )	return true;
+		if( _string.isEmpty() || myadv.containsKey(_string) )	return true;
 		return false;
 	}
 	
@@ -63,10 +89,10 @@ public class SentimentalDictionary {
 	}
 	
 	// put the words into the the HashMaps from 3 input files(positive sentimental words, negative sentimental words, adverbs)
-	public void makeDict(String _filenameP, String _filenameN, String _filenameADV) throws IOException {		
+	public void makeDict() {		
 		try {
 			// access positive words
-			String[] filenames = {_filenameP, "./docs/pos_by_training.txt"};
+			String[] filenames = {filenameP, "./docs/pos_by_training.txt"};
 			for(String filename : filenames) {
 				System.out.println("Accessing " + filename);
 				FileReader fr = new FileReader(filename);
@@ -79,13 +105,13 @@ public class SentimentalDictionary {
 				br.close();
 			}	
 		}
-		catch (FileNotFoundException e) {
+		catch (Exception e) {
 			System.out.println("File of Positive Words Not Found");
 			e.printStackTrace();
 		}
 		try {
 			// access negative words
-			String[] filenames = {_filenameN, "./docs/neg_by_training.txt"};
+			String[] filenames = {filenameN, "./docs/neg_by_training.txt"};
 			for(String filename : filenames) {
 				System.out.println("Accessing " + filename);
 				FileReader fr = new FileReader(filename);
@@ -98,14 +124,14 @@ public class SentimentalDictionary {
 				br.close();
 			}
 		}
-		catch (FileNotFoundException e) {
+		catch (Exception e) {
 			System.out.println("File of Negative Words Not Found");
 			e.printStackTrace();
 		}
 		try {
-			System.out.println("Accessing " + _filenameADV);
+			System.out.println("Accessing " + filenameADV);
 			// access negative words
-			FileReader fr = new FileReader(_filenameADV);
+			FileReader fr = new FileReader(filenameADV);
 			BufferedReader br = new BufferedReader(fr);
 			String tmp = br.readLine();
 			while(tmp != null) {
@@ -114,7 +140,7 @@ public class SentimentalDictionary {
 			}
 			br.close();
 		}
-		catch (FileNotFoundException e) {
+		catch (Exception e) {
 			System.out.println("File of Adverbs Not Found");
 			e.printStackTrace();
 		}

@@ -1,23 +1,18 @@
 package ui;
 
 import java.awt.Font;
-import java.io.File;
 import java.io.IOException;
+import java.util.Enumeration;
 
-import javax.imageio.ImageIO;
-import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.UIManager;
 
-import analyzer.SentimentAnalyzer;
-
+@SuppressWarnings("serial")
 public class UIFrame extends JFrame{
-	
-	private UIPanel ui_panel;
 	
 	public UIFrame() throws IOException {
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);	
-		setContentPane(ui_panel = new UIPanel());
+		setContentPane(new UIPanel());
 		setLocation(ALLBITS, ALLBITS);
 		setSize(400,600);
 		setUndecorated(true);
@@ -31,12 +26,12 @@ public class UIFrame extends JFrame{
 		//sa.work();
 		
 		/* GUI version */ 
-		UIFrame ui_frame = new UIFrame();
+		new UIFrame();
 		setUIFont(new javax.swing.plaf.FontUIResource("微軟正黑體", Font.BOLD, 16));
 	}
 	
 	public static void setUIFont(javax.swing.plaf.FontUIResource f) {
-		java.util.Enumeration keys = UIManager.getLookAndFeelDefaults().keys();
+		Enumeration<?> keys = UIManager.getLookAndFeelDefaults().keys();
 		while (keys.hasMoreElements()) {
 			Object key = keys.nextElement();
 			Object value = UIManager.get(key);

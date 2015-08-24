@@ -23,13 +23,13 @@ import javax.swing.JTextField;
 
 import analyzer.SentimentAnalyzer;
 
+@SuppressWarnings("serial")
 public class UIPanel extends JPanel implements ActionListener {
 
 	private JLabel labelT, labelA, labelP, labelN, labelADV, labelO, topic, warning, labelSO, labelTHREADS;
 	private JTextField textT, textA, textP, textN, textADV, textO, textSO, textTHREADS;
 	private JTextArea status;
 	private JButton btnT, btnA, btnP, btnN, btnADV, btnO, start, cancel, showResult;
-	private JScrollPane scrollPane;
 	Timer timer;
 	
 	class TTask extends TimerTask {
@@ -78,7 +78,7 @@ public class UIPanel extends JPanel implements ActionListener {
 		add( start = new JButton("Start Analyzing") );
 		add( cancel = new JButton("Cancel") );
 		add( showResult = new JButton("Show Results") );
-		add( scrollPane = new JScrollPane( status = new JTextArea(5, 28) ) );
+		add( new JScrollPane( status = new JTextArea(5, 28) ) );
 		add( warning = new JLabel("     ") );
 		btnP.addActionListener(this);
 		btnN.addActionListener(this);
@@ -120,13 +120,15 @@ public class UIPanel extends JPanel implements ActionListener {
 	@Override
 	public void actionPerformed(ActionEvent ae) {
 		if(ae.getSource() == start) {
-			SentimentAnalyzer sa = new SentimentAnalyzer( textP.getText(), textN.getText(), textADV.getText(), textT.getText(), textA.getText(), textO.getText() );
 			try {
 				status.setText("");
 				System.setOut( new PrintStream("./log/log.txt") );
 				System.setErr( new PrintStream("./log/log.txt") );
-				sa.setSORate( Double.parseDouble( textSO.getText() ) );
-				sa.setNTHREADS( Integer.parseInt( textTHREADS.getText() ) );
+				SentimentAnalyzer.setDictionary( textP.getText(), textN.getText(), textADV.getText() );
+				SentimentAnalyzer.setTrainingData( textT.getText(), textA.getText() );
+				SentimentAnalyzer.setSORate( Double.parseDouble( textSO.getText() ) );
+				SentimentAnalyzer.setNTHREADS( Integer.parseInt( textTHREADS.getText() ) );
+				SentimentAnalyzer sa = new SentimentAnalyzer(textO.getText(), "result.txt");
 				sa.work();
 				BufferedReader br = new BufferedReader( new FileReader("./log/log.txt") );
 				String tmp = br.readLine();
@@ -147,7 +149,8 @@ public class UIPanel extends JPanel implements ActionListener {
 		if(ae.getSource() == showResult) {
 			try {
 				Process process = Runtime.getRuntime().exec("showResult.bat");
-			} 
+				if( process.exitValue() != 0)	System.out.println("Fail to Show Result");
+			}
 			catch (IOException e) {
 				e.printStackTrace();
 			}

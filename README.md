@@ -31,11 +31,11 @@
 
 Step1 用標點、換行斷句
 
-	先由標點符號斷句，並使用Open Source的Library（MMSeg）
+	先由標點符號斷句，並使用Open Source的Library（結巴斷詞系統）
 
-	實現最大匹配、最大單詞長度的分詞
-
-	Reference: http://function1122.blogspot.tw/2010/10/mmseg4j-java-55.html
+	使用Trie結構樹、動態規劃實現最佳分詞
+	
+	Reference: https://github.com/huaban/jieba-analysis
 
 Step2 計算各單詞出現次數（頻率）
 
@@ -89,7 +89,7 @@ Step5 判斷整則評論的正反傾向
 
 ## API
 
-* Source Code已打包成`SentimentalAnalysis.jar`，外加`mmseg4j-all-1.8.2-with-dic.jar`
+* Source Code已打包成`SentimentalAnalysis.jar`，外加`jieba-analysis.jar`
 
 * Library Setting好之後，使用`SentimentAnalyzer()`建構子和method－`work()`來run
 
@@ -97,7 +97,11 @@ Step5 判斷整則評論的正反傾向
 
 * method－`setSORate(double)` 可調整Training時取字的嚴謹程度
 
-![API](http://i.imgur.com/h7vehb9.jpg)
+* static method - `setDictionary(String, String, String)` 可自訂情緒自典的路徑與檔名
+
+* static method - `setTrainingData(String, String)` 可自訂Training資料的路徑與檔名
+
+![API](http://i.imgur.com/hIH7vqM.jpg)
 
 
 ## Input File Format
@@ -133,13 +137,7 @@ Step5 判斷整則評論的正反傾向
 
 * `result.txt`中每則評論的分析占4行
 
-	Line1	`NO.%d rate = %d (Positive)`	或　`NO.%d rate = %d (Negative)`
-
-	Line2	原評論的斷詞結果
-
-	Line3	`Keywords Found: ` + 數個`%s(+1、-1或adv)`，為找到的關鍵字和其意義
-
-	Line4	空行
+* 第一行為分析結果，第二行顯示斷詞，第三行則是抓到的關鍵字，最後一行空白
 
 * 檔尾則會另列此次分析中，正反評論中的前10名關鍵字
 

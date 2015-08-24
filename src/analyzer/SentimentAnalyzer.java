@@ -11,29 +11,22 @@ import java.util.concurrent.Future;
 
 public class SentimentAnalyzer {
 	
-	private int NTHREADS = 4;
-	private String filenameP = new String("./docs/positive.txt");
-	private String filenameN = new String("./docs/negative.txt");
-	private String filenameADV = new String("./docs/adv.txt");
-	private String filenameT = new String("./docs/training.txt");
-	private String filenameA = new String("./docs/answer.txt");
-	private String filenameO = new String("./docs/opinion.txt");
+	private static int NTHREADS = 4;
 	// create dictionary and reader
-	private SentimentalDictionary dict;
+	private static SentimentalDictionary dict;
+	// create SegChinese
+	private static SegChinese seg;  
+
 	private TextReader txt_rdr;
+	private String filenameO = new String("./docs/opinion.txt");
+	private String filenameR = new String("./result.txt");
 	// number of positive answers and the total number of opinions
 	private int positive;
 	private int total_opinions;
-	// create SegChinese
-	private SegChinese seg = new SegChinese();  
 	// create frequency recorder
 	private FrequencyRecorder f_rec;
-	// create trainer
-	private KeywordFinder trainer;
 	// OutputWriter
 	private FileWriter fw;
-	// SORate
-	private double SORate = 3.0d;
 	
 	public class SACallable implements Callable<String> {
 
@@ -86,12 +79,16 @@ public class SentimentAnalyzer {
 					if( sentence.contains("不") || sentence.contains("沒") )		rate *= -1;
 					total_rate += rate;
 				}
-				if(total_rate >= 0)	positive += 1;
+				synchronized(SentimentAnalyzer.this) {
+					if(total_rate >= 0)	positive += 1;
+				}
 				output = "NO." + (index + 1) + ": rate = " + total_rate + (total_rate >= 0 ? " (Positive)\n" : " (Negative)\n");
 				for(String sentence : opinion) {
-						output += (seg.segWords(sentence, " ") + " "); // print detail
-					for( String segSentence : seg.getSegList(sentence) ){
-						if(total_rate >= 0)	f_rec.addPosFrequency(segSentence);
+					String after_seg =  seg.segWords(sentence, " ");
+					output += (after_seg + " "); // print detail
+					for( String segSentence : after_seg.split(" ") ){
+						if( segSentence.length() <= 1 )	continue;
+						else if(total_rate >= 0)	f_rec.addPosFrequency(segSentence);
 						else	f_rec.addNegFrequency(segSentence);
 					}
 				}
@@ -108,24 +105,44 @@ public class SentimentAnalyzer {
 		
 	}
 	
-	public SentimentAnalyzer(String _filenameP, String _filenameN, String _filenameADV, String _filenameT, String _filenameA, String _filenameO) {
-		filenameP = _filenameP;
-		filenameN = _filenameN;
-		filenameADV = _filenameADV;
-		filenameT = _filenameT;
-		filenameA = _filenameA;
-		filenameO = _filenameO;
-	}
-	
+	// setup the static SegChinese, KeywordFinder and SentimentalDictionary before work()
 	public SentimentAnalyzer() {
+		seg = SegChinese.getInstance();
+		KeywordFinder.getInstance();
+		dict = SentimentalDictionary.getInstance();
 	}
 
-	public void setSORate(double _rate) {
-		SORate = _rate;
+	// set specific I/O files
+	public SentimentAnalyzer(String inputFile, String outputFile) {
+		seg = SegChinese.getInstance();
+		KeywordFinder.getInstance();
+		dict = SentimentalDictionary.getInstance();
+		filenameO = inputFile;
+		filenameR = outputFile;
 	}
 	
-	public void setNTHREADS(int _nthreads) {
+	// set specific dictionary files and remove the old instance to make the new one available
+	public static void setDictionary(String positiveDict, String negativeDict, String advDict) {
+		SentimentalDictionary.removeInstance();
+		SentimentalDictionary.setFilename(positiveDict, negativeDict, advDict);
+	}
+	
+	// set specific training data and remove the old instance to make the new one available
+	public static void setTrainingData(String trainingFile, String trainingAnswer) {
+		SentimentalDictionary.removeInstance();
+		KeywordFinder.removeInstance();
+		KeywordFinder.setFileame(trainingFile, trainingAnswer);
+	}
+	
+	public static void setSORate(double _rate) {
+		SentimentalDictionary.removeInstance();
+		KeywordFinder.removeInstance();
+		KeywordFinder.setSORate(_rate);
+	}
+	
+	public static void setNTHREADS(int _nthreads) {
 		NTHREADS = _nthreads;
+		KeywordFinder.setNTHREADS(_nthreads);
 	}
 	
 	private void analyze() throws IOException, InterruptedException, ExecutionException {
@@ -143,58 +160,31 @@ public class SentimentAnalyzer {
 		for(Future<String> result : resList)	fw.write( result.get() );
 	}
 	
-	public void work() throws IOException {
-		long beginTime, trainTime, dictTime, analyzeTime;
-		dict = new SentimentalDictionary();
-		txt_rdr = new TextReader();
-		f_rec = new FrequencyRecorder();
-		trainer = new KeywordFinder();
-		fw = new FileWriter("result.txt");
-		
-		// training
-		beginTime = System.currentTimeMillis();
-		trainer.setSORate(SORate);
-		trainer.setNTHREADS(NTHREADS);
-		trainer.readTrainingData(filenameT, filenameA);
-		trainer.train();
-		trainer.printToFile();
-		trainTime = System.currentTimeMillis() - beginTime;
-		
-		// make dictionary
-		beginTime = System.currentTimeMillis();
-		dict.makeDict(filenameP, filenameN, filenameADV);
-		dictTime = System.currentTimeMillis() - beginTime;
-		
-		beginTime = System.currentTimeMillis();
-		// read text file
-		txt_rdr.readText(filenameO);
-		// analyzing
+	public void work() {
 		try {
+			long beginTime = System.currentTimeMillis();
+			txt_rdr = new TextReader();
+			txt_rdr.readText(filenameO);
+			f_rec = new FrequencyRecorder();
+			fw = new FileWriter(filenameR);
 			analyze();
-		} 
-		catch (InterruptedException e) {
-			e.printStackTrace();
-		} 
-		catch (ExecutionException e) {
+			System.out.println("Completed!");
+			System.out.println("Time for Analyzing: " + (System.currentTimeMillis() - beginTime) / 1000.0 + " second(s)");
+			System.out.println( "Number of Words in Dictionary: " + dict.getSize() );
+			System.out.println( "Positive/Negative: " + positive + "/" + (total_opinions - positive) );	
+			System.out.println( "Frequent Words: " + f_rec.getFrequentWordsString(500) );
+			fw.write("Top Ten Keywords from Positive Opinions: ");
+			for( String s : f_rec.getTopTenPosWords() )	fw.write(s + "(" + f_rec.getPosFrequency(s) + ") ");
+			fw.write("\n");
+			fw.write("Top Ten Keywords from Negative Opinions: ");
+			for( String s : f_rec.getTopTenNegWords() )	fw.write(s + "(" + f_rec.getNegFrequency(s) + ") ");
+			fw.write("\n");
+			fw.flush();
+			fw.close();
+		}
+		catch (Exception e) {
 			e.printStackTrace();
 		}
-		analyzeTime = System.currentTimeMillis() - beginTime;
-		
-		System.out.println("Completed!");
-		System.out.println("Time for Training: " + trainTime / 1000.0 + " second(s)");
-		System.out.println("Time for Making Dictionary: " + dictTime / 1000.0 + " second(s)");
-		System.out.println("Time for Analyzing: " + analyzeTime / 1000.0 + " second(s)");
-		System.out.println( "Number of Words in Dictionary: " + dict.getSize() );
-		System.out.println( "Positive/Negative: " + positive + "/" + (total_opinions - positive) );	
-		System.out.println( "Frequent Words: " + f_rec.getFrequentWordsString(500) );
-		fw.write("Top Ten Keywords from Positive Opinions: ");
-		for( String s : f_rec.getTopTenPosWords() )	fw.write(s + "(" + f_rec.getPosFrequency(s) + ") ");
-		fw.write("\n");
-		fw.write("Top Ten Keywords from Negative Opinions: ");
-		for( String s : f_rec.getTopTenNegWords() )	fw.write(s + "(" + f_rec.getNegFrequency(s) + ") ");
-		fw.write("\n");
-		fw.flush();
-		fw.close();	
 	}
 	
 }

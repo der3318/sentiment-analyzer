@@ -58,6 +58,7 @@ public class CkipReader {
 				}
 				tmp = br.readLine();
 			}
+			br.close();
 		}
 		catch (FileNotFoundException e) {
 			System.out.println("Ckip File not Found");

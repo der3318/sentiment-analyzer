@@ -1,6 +1,7 @@
 Accessing ./docs/answer.txt
 Accessing ./docs/training.txt
 Saving Results into "./docs/pos_by_training.txt" and "./docs/neg_by_training.txt"
+Time for Training: 0.505 second(s)
 Accessing ./docs/positive.txt
 Accessing ./docs/pos_by_training.txt
 Accessing ./docs/negative.txt
@@ -9,9 +10,7 @@ Accessing ./docs/adv.txt
 Accessing ./docs/opinion.txt
 Now Analyzing...
 Completed!
-Time for Training: 0.269 second(s)
-Time for Making Dictionary: 0.009 second(s)
-Time for Analyzing: 0.504 second(s)
-Number of Words in Dictionary: 13796
-Positive/Negative: 748/752
-Frequent Words: 服務(664) 了(1372) 在(529) 很(755) 我(838) 是(1271) 有(580) 的(5026) 酒店(1874) 房間(1336) 
+Time for Analyzing: 0.54 second(s)
+Number of Words in Dictionary: 16859
+Positive/Negative: 667/833
+Frequent Words: 不錯(625) 沒有(633) 服務(1163) 酒店(2027) 房間(1456) 

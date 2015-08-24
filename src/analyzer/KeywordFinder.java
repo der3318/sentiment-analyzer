@@ -1,7 +1,6 @@
 package analyzer;
 
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -11,20 +10,24 @@ import java.util.concurrent.Executors;
 
 public class KeywordFinder {
 
-	private int NTHREADS = 4;
+	private static KeywordFinder finder;
+	private static String filenameT = new String("./docs/training.txt");
+	private static String filenameA = new String("./docs/answer.txt");
+	private static int NTHREADS = 4;
+	// set the branch for SO-PMI result
+	private static double SO_rate = 3d;
+	// create SegChinese
+	private static SegChinese seg = SegChinese.getInstance();  
+
 	// create dictionary and reader
 	private SentimentalDictionary dict = new SentimentalDictionary();
 	private TextReader txt_rdr = new TextReader();	
-	// create SegChinese
-	private SegChinese seg = new SegChinese();  
 	// create frequency recorder
 	private FrequencyRecorder f_rec = new FrequencyRecorder();
 	// an ArrayList holding the answers of the training data
 	private ArrayList<Boolean> ans = new ArrayList<Boolean>();
 	private int ans_pos = 0;
 	private int ans_neg = 0;
-	// set the branch for SO-PMI result
-	private double SO_rate = 3d;
 	
 	public class FreRunnable implements Runnable {
 
@@ -39,7 +42,8 @@ public class KeywordFinder {
 			for(String sentence : opinion) {
 				try {
 					for( String subSentence : seg.getSegList(sentence) ) {
-						if( ans.get(index) )	f_rec.addPosFrequency(subSentence);
+						if( subSentence.length() <= 1 )	continue;
+						else if( ans.get(index) )	f_rec.addPosFrequency(subSentence);
 						else	f_rec.addNegFrequency(subSentence);
 					}
 				}
@@ -66,11 +70,37 @@ public class KeywordFinder {
 	
 	}
 
-	public void setSORate(double _rate) {
+	public static KeywordFinder getInstance() {
+        if (finder == null) {
+            synchronized (KeywordFinder.class) {
+                if (finder == null) {
+                	finder = new KeywordFinder();
+                	long beginTime = System.currentTimeMillis();
+                	finder.readTrainingData();
+                	finder.train();
+                	finder.printToFile();
+                	System.out.println("Time for Training: " + (System.currentTimeMillis() - beginTime) / 1000.0 + " second(s)");
+                	return finder;
+                }
+            }
+        }
+        return finder;
+    }
+	
+	public static void removeInstance() {
+		finder = null;
+	}
+	
+	public static void setFileame(String _filenameT, String _filenameA) {
+		filenameT = _filenameT;
+		filenameA = _filenameA;
+	}
+	
+	public static void setSORate(double _rate) {
 		SO_rate = _rate;
 	}
 	
-	public void setNTHREADS(int _nthreads) {
+	public static void setNTHREADS(int _nthreads) {
 		NTHREADS = _nthreads;
 	}
 	
@@ -79,11 +109,11 @@ public class KeywordFinder {
 		return Math.log( ((double)f_rec.getPosFrequency(_string) + 0.1) / ((double)f_rec.getNegFrequency(_string) + 0.1) * ((double)ans_neg + 0.1) / ((double)ans_pos + 0.1) );
 	}
 	
-	public void readTrainingData(String _filenameT, String _filenameA) throws IOException {
+	public void readTrainingData() {
 		// readAnswer
 		try {
-			System.out.println("Accessing " + _filenameA);
-			FileReader fr = new FileReader(_filenameA);
+			System.out.println("Accessing " + filenameA);
+			FileReader fr = new FileReader(filenameA);
 			BufferedReader br = new BufferedReader(fr);
 			String tmp = br.readLine();
 			while(tmp != null) {
@@ -98,16 +128,15 @@ public class KeywordFinder {
 				tmp = br.readLine();
 			}
 			br.close();
+			// readText
+			txt_rdr.readText(filenameT);
 		}
-		catch (FileNotFoundException e) {
-			System.out.println("Answer File not Found");
+		catch (IOException e) {
 			e.printStackTrace();
 		}
-		// readText
-		txt_rdr.readText(_filenameT);
 	}
 	
-	public void train() throws IOException {
+	public void train() {
 		int n = txt_rdr.getSize();
 		assert( n == ans.size() && n != 0);
 		ExecutorService fre_executor = Executors.newFixedThreadPool(NTHREADS);
@@ -128,16 +157,21 @@ public class KeywordFinder {
 		}
 	}
 
-	public void printToFile() throws IOException {
-		System.out.println("Saving Results into \"./docs/pos_by_training.txt\" and \"./docs/neg_by_training.txt\"");
-		FileWriter fw_p = new FileWriter("./docs/pos_by_training.txt");
-		for( String s : dict.getPositiveWords() )	fw_p.write(s + "\n");
-		FileWriter fw_n = new FileWriter("./docs/neg_by_training.txt");
-		for( String s : dict.getNegativeWords() )	fw_n.write(s + "\n");
-		fw_p.flush();
-		fw_n.flush();
-		fw_p.close();
-		fw_n.close();
+	public void printToFile() {
+		try {
+			System.out.println("Saving Results into \"./docs/pos_by_training.txt\" and \"./docs/neg_by_training.txt\"");
+			FileWriter fw_p = new FileWriter("./docs/pos_by_training.txt");
+			for( String s : dict.getPositiveWords() )	fw_p.write(s + "\n");
+			FileWriter fw_n = new FileWriter("./docs/neg_by_training.txt");
+			for( String s : dict.getNegativeWords() )	fw_n.write(s + "\n");
+			fw_p.flush();
+			fw_n.flush();
+			fw_p.close();
+			fw_n.close();
+		}
+		catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 	
 }
