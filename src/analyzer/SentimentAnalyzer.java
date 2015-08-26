@@ -3,6 +3,7 @@ package analyzer;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Locale;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -12,22 +13,23 @@ import java.util.concurrent.Future;
 public class SentimentAnalyzer {
 	
 	private static int NTHREADS = 4;
-	// create dictionary and reader
+	// dictionary and Segmenter
 	private static SentimentalDictionary dict;
-	// create SegChinese
 	private static SegChinese seg;  
 
+	// reader and IO filenames
 	private TextReader txt_rdr;
 	private String filenameO = new String("./docs/opinion.txt");
 	private String filenameR = new String("./result.txt");
 	// number of positive answers and the total number of opinions
 	private int positive;
 	private int total_opinions;
-	// create frequency recorder
+	// frequency recorder
 	private FrequencyRecorder f_rec;
 	// OutputWriter
 	private FileWriter fw;
 	
+	// each Callable holds one opinion, returning the output string generated  
 	public class SACallable implements Callable<String> {
 
 		private int index;
@@ -43,10 +45,9 @@ public class SentimentAnalyzer {
 				ArrayList<String> opinion = txt_rdr.getTextbyIndex(index);
 				ArrayList<String> keywords = new ArrayList<String>();
 				ArrayList<String> keyadvs = new ArrayList<String>();
-				for(int i = 0 ; i < opinion.size() ; i++) {
-					// get the "i th" sentence in the "index th" opinion
+				for(String sentence : opinion) {
+					// get one sentence in the "index th" opinion
 					int rate = 0, flag = 1;
-					String sentence = opinion.get(i);
 					// disassemble the sentence and check adverbs
 					for(int length = sentence.length(); length > 0 ; length--) {
 						for(int endIndex = sentence.length() ; endIndex >= length ; endIndex--) {
@@ -67,8 +68,8 @@ public class SentimentAnalyzer {
 							String word = sentence.substring(endIndex - length, endIndex);
 							// keyword found
 							if(dict.checkWord(word) != 0) {
-								keywords.add(word);
 								rate += flag * dict.checkWord(word);
+								keywords.add(word);
 								sentence = sentence.replaceAll(word, "");
 								length = sentence.length() + 1;
 								break;
@@ -82,7 +83,7 @@ public class SentimentAnalyzer {
 				synchronized(SentimentAnalyzer.this) {
 					if(total_rate >= 0)	positive += 1;
 				}
-				output = "NO." + (index + 1) + ": rate = " + total_rate + (total_rate >= 0 ? " (Positive)\n" : " (Negative)\n");
+				output = String.format(Locale.getDefault(), "NO.%d: rate = ", total_rate) + (total_rate >= 0 ? " (Positive)\n" : " (Negative)\n");
 				for(String sentence : opinion) {
 					String after_seg =  seg.segWords(sentence, " ");
 					output += (after_seg + " "); // print detail
@@ -93,8 +94,8 @@ public class SentimentAnalyzer {
 					}
 				}
 				output += "\nKeyWords Found: ";
-				for(String word : keywords)	output += (word + "(" + dict.checkWord(word) + ") ");
-				for(String word : keyadvs)	output += (word + "(adv) ");
+				for(String word : keywords)	output += String.format( Locale.getDefault(), "%s(%d) ", word, dict.checkWord(word) );
+				for(String word : keyadvs)	output += String.format(Locale.getDefault(), "%s(adv) ", word);
 				output += "\n\n";
 			}
 			catch(Exception ex) {
@@ -134,10 +135,16 @@ public class SentimentAnalyzer {
 		KeywordFinder.setFileame(trainingFile, trainingAnswer);
 	}
 	
+	public static void setPosNegSORate(double pos_rate, double neg_rate) {
+		SentimentalDictionary.removeInstance();
+		KeywordFinder.removeInstance();
+		KeywordFinder.setSORate(pos_rate, neg_rate);
+	}
+	
 	public static void setSORate(double _rate) {
 		SentimentalDictionary.removeInstance();
 		KeywordFinder.removeInstance();
-		KeywordFinder.setSORate(_rate);
+		KeywordFinder.setSORate(_rate, _rate);
 	}
 	
 	public static void setNTHREADS(int _nthreads) {
@@ -163,21 +170,24 @@ public class SentimentAnalyzer {
 	public void work() {
 		try {
 			long beginTime = System.currentTimeMillis();
+			// reading
 			txt_rdr = new TextReader();
 			txt_rdr.readText(filenameO);
+			// create recorder
 			f_rec = new FrequencyRecorder();
 			fw = new FileWriter(filenameR);
+			// start analyzing
 			analyze();
+			// output message
 			System.out.println("Completed!");
-			System.out.println("Time for Analyzing: " + (System.currentTimeMillis() - beginTime) / 1000.0 + " second(s)");
+			System.out.println( String.format(Locale.getDefault(), "Time for Analyzing: %ld second(s)", (System.currentTimeMillis() - beginTime) / 1000.0) );
 			System.out.println( "Number of Words in Dictionary: " + dict.getSize() );
-			System.out.println( "Positive/Negative: " + positive + "/" + (total_opinions - positive) );	
-			System.out.println( "Frequent Words: " + f_rec.getFrequentWordsString(500) );
+			System.out.println( String.format(Locale.getDefault(), "Positive/Negative: %d/%d", positive , total_opinions - positive) );	
+			System.out.println( "Frequent Words(>=500): " + f_rec.getFrequentWordsString(500) );
 			fw.write("Top Ten Keywords from Positive Opinions: ");
-			for( String s : f_rec.getTopTenPosWords() )	fw.write(s + "(" + f_rec.getPosFrequency(s) + ") ");
-			fw.write("\n");
-			fw.write("Top Ten Keywords from Negative Opinions: ");
-			for( String s : f_rec.getTopTenNegWords() )	fw.write(s + "(" + f_rec.getNegFrequency(s) + ") ");
+			for( String s : f_rec.getTopTenPosWords() )	fw.write( String.format( Locale.getDefault(), "%s(%d) ", s, f_rec.getPosFrequency(s) ) );
+			fw.write("\nTop Ten Keywords from Negative Opinions: ");
+			for( String s : f_rec.getTopTenNegWords() )	fw.write( String.format( Locale.getDefault(), "%s(%d) ", s, f_rec.getNegFrequency(s) ) );
 			fw.write("\n");
 			fw.flush();
 			fw.close();

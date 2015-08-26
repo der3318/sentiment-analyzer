@@ -93,11 +93,11 @@ Step5 判斷整則評論的正反傾向
 
 * Library Setting好之後，使用`SentimentAnalyzer()`建構子和method－`work()`來run
 
-* method－`setNTHREADS(int)` 可設定Training和Analyzing時的Threads數量
+* static method－`setNTHREADS(int)` 可設定Training和Analyzing時的Threads數量
 
-* method－`setSORate(double)` 可調整Training時取字的嚴謹程度
+* static method－`setSORate(double)` 可調整Training時取字的嚴謹程度
 
-* static method - `setDictionary(String, String, String)` 可自訂情緒自典的路徑與檔名
+* static method - `setDictionary(String, String, String)` 可自訂情緒字典的路徑與檔名
 
 * static method - `setTrainingData(String, String)` 可自訂Training資料的路徑與檔名
 
@@ -135,7 +135,7 @@ Step5 判斷整則評論的正反傾向
 
 * 分析後會於當前目錄產生`result.txt`
 
-* `result.txt`中每則評論的分析占4行
+* 預設為`result.txt`，每則評論的分析占4行
 
 * 第一行為分析結果，第二行顯示斷詞，第三行則是抓到的關鍵字，最後一行空白
 

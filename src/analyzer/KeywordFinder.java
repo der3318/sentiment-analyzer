@@ -10,13 +10,16 @@ import java.util.concurrent.Executors;
 
 public class KeywordFinder {
 
+	// a static finder shared by all analyzers
 	private static KeywordFinder finder;
+	// filenames
 	private static String filenameT = new String("./docs/training.txt");
 	private static String filenameA = new String("./docs/answer.txt");
 	private static int NTHREADS = 4;
 	// set the branch for SO-PMI result
-	private static double SO_rate = 3d;
-	// create SegChinese
+	private static double pos_SO_rate = 3d;
+	private static double neg_SO_rate = 3d;
+	// setup Segmenter
 	private static SegChinese seg = SegChinese.getInstance();  
 
 	// create dictionary and reader
@@ -29,6 +32,7 @@ public class KeywordFinder {
 	private int ans_pos = 0;
 	private int ans_neg = 0;
 	
+	// each Runnable Object holds one opinion, separating the opinion into words
 	public class FreRunnable implements Runnable {
 
 		private int index;
@@ -55,6 +59,7 @@ public class KeywordFinder {
 		
 	}
 	
+	// each Runnable Object holds one string, determining whether if should be added to the dictionary or not
 	public class DictRunnable implements Runnable {
 		
 		private String s;
@@ -64,12 +69,13 @@ public class KeywordFinder {
 		}
 		
 		public void run() {
-			if( SO(s) > SO_rate )	 dict.addPositiveWords(s);
-			else if( SO(s) < -SO_rate )	dict.addNegativeWords(s);
+			if( SO(s) > pos_SO_rate )	 dict.addPositiveWords(s);
+			else if( SO(s) < -neg_SO_rate )	dict.addNegativeWords(s);
 		}
 	
 	}
 
+	// return the prepared finder. if not found, create one
 	public static KeywordFinder getInstance() {
         if (finder == null) {
             synchronized (KeywordFinder.class) {
@@ -87,6 +93,7 @@ public class KeywordFinder {
         return finder;
     }
 	
+	// remove the current finder due to some changes of settings
 	public static void removeInstance() {
 		finder = null;
 	}
@@ -96,8 +103,9 @@ public class KeywordFinder {
 		filenameA = _filenameA;
 	}
 	
-	public static void setSORate(double _rate) {
-		SO_rate = _rate;
+	public static void setSORate(double pos_rate, double neg_rate) {
+		pos_SO_rate = pos_rate;
+		neg_SO_rate = neg_rate;
 	}
 	
 	public static void setNTHREADS(int _nthreads) {
@@ -110,8 +118,8 @@ public class KeywordFinder {
 	}
 	
 	public void readTrainingData() {
-		// readAnswer
 		try {
+			// readAnswer
 			System.out.println("Accessing " + filenameA);
 			FileReader fr = new FileReader(filenameA);
 			BufferedReader br = new BufferedReader(fr);

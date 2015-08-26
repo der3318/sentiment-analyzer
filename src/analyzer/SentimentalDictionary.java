@@ -7,7 +7,9 @@ import java.util.HashMap;
 
 public class SentimentalDictionary {
 	
+	// a static dictionary shared by all analyzers 
 	private static SentimentalDictionary dictionary;
+	// filenames
 	private static String filenameP = new String("./docs/positive.txt");
 	private static String filenameN = new String("./docs/negative.txt");
 	private static String filenameADV = new String("./docs/adv.txt");
@@ -16,6 +18,7 @@ public class SentimentalDictionary {
 	private HashMap<String, Integer> mydict = new HashMap<String, Integer>();
 	private HashMap<String, Boolean> myadv = new HashMap<String, Boolean>();
 	
+	// return the prepared dictionary. if not found, create one
 	public static SentimentalDictionary getInstance() {
         if (dictionary == null) {
             synchronized (SentimentalDictionary.class) {
@@ -29,6 +32,7 @@ public class SentimentalDictionary {
         return dictionary;
     }
 	
+	// remove the current dictionary due to some changes of settings
 	public static void removeInstance() {
 		dictionary = null;
 	}

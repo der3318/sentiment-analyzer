@@ -68,7 +68,6 @@ public class FrequencyRecorder {
 			);
 		for( Map.Entry<String, Integer> entry : list_entry ) {
 			if(output.size() == 10)	break;
-			if(entry.getKey().equals("的") || entry.getKey().equals("是") || entry.getKey().equals("了") || entry.getKey().equals("我"))	continue;
 			output.add( entry.getKey() );
 		}
 		return output;
@@ -88,7 +87,6 @@ public class FrequencyRecorder {
 			);
 		for( Map.Entry<String, Integer> entry : list_entry ) {
 			if(output.size() == 10)	break;
-			if(entry.getKey().equals("的") || entry.getKey().equals("是") || entry.getKey().equals("了") || entry.getKey().equals("我"))	continue;
 			output.add( entry.getKey() );
 		}
 		return output;

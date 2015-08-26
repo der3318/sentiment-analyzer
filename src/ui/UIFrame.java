@@ -7,9 +7,13 @@ import java.util.Enumeration;
 import javax.swing.JFrame;
 import javax.swing.UIManager;
 
-@SuppressWarnings("serial")
 public class UIFrame extends JFrame{
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
 	public UIFrame() throws IOException {
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);	
 		setContentPane(new UIPanel());
@@ -20,7 +24,6 @@ public class UIFrame extends JFrame{
 	}
 	
 	public static void main(String[] args) throws IOException {
-		
 		/* Command Line version */ 
 		//SentimentAnalyzer sa = new SentimentAnalyzer();
 		//sa.work();

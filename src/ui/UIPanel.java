@@ -23,9 +23,12 @@ import javax.swing.JTextField;
 
 import analyzer.SentimentAnalyzer;
 
-@SuppressWarnings("serial")
 public class UIPanel extends JPanel implements ActionListener {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private JLabel labelT, labelA, labelP, labelN, labelADV, labelO, topic, warning, labelSO, labelTHREADS;
 	private JTextField textT, textA, textP, textN, textADV, textO, textSO, textTHREADS;
 	private JTextArea status;

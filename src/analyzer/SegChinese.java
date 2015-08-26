@@ -9,6 +9,7 @@ import com.huaban.analysis.jieba.SegToken;
 
 public class SegChinese {
 
+	// a static Segmenter shared by all analyzers
 	private static SegChinese seg;
 	
 	protected JiebaSegmenter segmenter;
@@ -17,6 +18,7 @@ public class SegChinese {
 		segmenter = new JiebaSegmenter();
 	}
 
+	// return the prepared Segmenter. if not found, create one
 	public static SegChinese getInstance() {
         if (seg == null) {
             synchronized (SegChinese.class) {
