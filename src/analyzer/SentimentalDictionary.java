@@ -16,6 +16,7 @@ public class SentimentalDictionary {
 	
 	// a HashMap holding sentimental words as keys
 	private HashMap<String, Integer> mydict = new HashMap<String, Integer>();
+	// a HashMap holding adverbs as keys
 	private HashMap<String, Boolean> myadv = new HashMap<String, Boolean>();
 	
 	// return the prepared dictionary. if not found, create one
@@ -32,7 +33,7 @@ public class SentimentalDictionary {
         return dictionary;
     }
 	
-	// remove the current dictionary due to some changes of settings
+	// remove the current dictionary due to some setting changes
 	public static void removeInstance() {
 		dictionary = null;
 	}
@@ -49,7 +50,7 @@ public class SentimentalDictionary {
 		else	mydict.put(_string, 1);
 	}
 	
-	// add a positive word into dictionary
+	// add a negative word into dictionary
 	public synchronized void addNegativeWords(String _string) {
 		if( mydict.containsKey(_string) )	mydict.put(_string, mydict.get(_string) - 1);
 		else	mydict.put(_string, -1);

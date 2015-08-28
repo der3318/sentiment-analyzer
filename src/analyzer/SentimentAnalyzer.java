@@ -47,6 +47,7 @@ public class SentimentAnalyzer {
 				ArrayList<String> keyadvs = new ArrayList<String>();
 				for(String sentence : opinion) {
 					// get one sentence in the "index th" opinion
+					// flag = 2 if any adv is found 
 					int rate = 0, flag = 1;
 					// disassemble the sentence and check adverbs
 					for(int length = sentence.length(); length > 0 ; length--) {
@@ -180,7 +181,7 @@ public class SentimentAnalyzer {
 			analyze();
 			// output message
 			System.out.println("Completed!");
-			System.out.println( String.format(Locale.getDefault(), "Time for Analyzing: %ld second(s)", (System.currentTimeMillis() - beginTime) / 1000.0) );
+			System.out.println( "Time for Analyzing: " + ( (System.currentTimeMillis() - beginTime) / 1000.0 ) + " second(s)");
 			System.out.println( "Number of Words in Dictionary: " + dict.getSize() );
 			System.out.println( String.format(Locale.getDefault(), "Positive/Negative: %d/%d", positive , total_opinions - positive) );	
 			System.out.println( "Frequent Words(>=500): " + f_rec.getFrequentWordsString(500) );

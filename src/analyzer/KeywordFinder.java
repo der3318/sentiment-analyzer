@@ -93,7 +93,7 @@ public class KeywordFinder {
         return finder;
     }
 	
-	// remove the current finder due to some changes of settings
+	// remove the current finder due to some setting changes
 	public static void removeInstance() {
 		finder = null;
 	}
