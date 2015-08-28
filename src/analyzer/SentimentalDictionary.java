@@ -64,7 +64,7 @@ public class SentimentalDictionary {
 	
 	// check if the input word is adv or not
 	public boolean checkAdv(String _string) {
-		if( _string.isEmpty() || myadv.containsKey(_string) )	return true;
+		if( myadv.containsKey(_string) && !_string.isEmpty() )	return true;
 		return false;
 	}
 	
